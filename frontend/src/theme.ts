@@ -1,5 +1,12 @@
 import { createTheme } from "@mantine/core";
 
+const inputStyles = {
+  input: {
+    backgroundColor: "var(--mantine-color-dark-8)",
+    borderColor: "var(--mantine-color-dark-6)",
+  },
+};
+
 export const theme = createTheme({
   primaryColor: "teal",
   fontFamily: "'Roboto', sans-serif",
@@ -21,5 +28,13 @@ export const theme = createTheme({
   headings: {
     fontFamily: "'Roboto', sans-serif",
     fontWeight: "600",
+  },
+  components: {
+    TextInput: { styles: inputStyles },
+    PasswordInput: { styles: inputStyles },
+    Select: { styles: inputStyles },
+    Textarea: { styles: inputStyles },
+    NumberInput: { styles: inputStyles },
+    FileInput: { styles: inputStyles },
   },
 });

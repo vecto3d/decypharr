@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  AppShell,
   Burger,
   Group,
   Text,
@@ -12,10 +11,10 @@ import {
   Badge,
   Box,
   Divider,
-  ActionIcon,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { SolarDashboard, SolarDownload, SolarRepair, SolarSettings, SolarChart, SolarLayers } from "@/components/Icons";
+import { LastUpdated } from "@/components/LastUpdated";
 import { api } from "@/lib/api";
 import type { VersionInfo } from "@/lib/types";
 
@@ -91,15 +90,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [opened, { toggle, close }] = useDisclosure();
   const pathname = usePathname();
   const [version, setVersion] = useState<VersionInfo | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<string>("");
 
   useEffect(() => {
     api.getVersion().then(setVersion).catch(() => {});
-    const interval = setInterval(() => {
-      setLastUpdate(new Date().toLocaleTimeString());
-    }, 5000);
-    setLastUpdate(new Date().toLocaleTimeString());
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -181,18 +174,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         >
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           <Group gap={8} ml="auto">
-            <Text size="xs" c="dark.3">
-              {lastUpdate && `Updated ${lastUpdate}`}
-            </Text>
-            <Box
-              w={8}
-              h={8}
-              style={{
-                borderRadius: "50%",
-                background: "var(--mantine-color-teal-6)",
-                animation: "pulse 2s infinite",
-              }}
-            />
+            <LastUpdated />
             {version && (
               <Badge variant="light" color="teal" size="sm">
                 v{version.version}

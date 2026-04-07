@@ -50,6 +50,29 @@ export function getStateColor(state: string): string {
   }
 }
 
+// Map torrent state to simplified status
+export type TorrentStatus = "downloading" | "streaming" | "local";
+
+export function mapStatus(state: string, progress: number): TorrentStatus {
+  if (state === "downloading" || state === "stalledDL" || state === "metaDL" || state === "queuedDL") return "downloading";
+  if (progress >= 1 || state === "pausedUP" || state === "uploading") return "local";
+  return "streaming";
+}
+
+export function getStatusColor(status: TorrentStatus): string {
+  switch (status) {
+    case "downloading": return "blue";
+    case "streaming": return "orange";
+    case "local": return "green";
+  }
+}
+
+export function getTypeFromCategory(category: string): "movie" | "tv" {
+  const c = category.toLowerCase();
+  if (c.includes("movie") || c.includes("radarr") || c.includes("film")) return "movie";
+  return "tv";
+}
+
 export function getStateLabel(state: string): string {
   switch (state) {
     case "downloading":

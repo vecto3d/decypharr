@@ -1,58 +1,99 @@
 "use client";
 
-import { Icon, type IconProps } from "@iconify/react";
+import { Icon, addIcon } from "@iconify/react/offline";
+import type { IconifyIcon } from "@iconify/react/offline";
 
-interface SolarIconProps extends Omit<IconProps, "icon"> {
+// Import icon data at build time — no CDN fetches at runtime
+import widget5Bold from "@iconify-icons/solar/widget-5-bold";
+import downloadMinimalisticBold from "@iconify-icons/solar/download-minimalistic-bold";
+import uploadMinimalisticBold from "@iconify-icons/solar/upload-minimalistic-bold";
+import settingsBold from "@iconify-icons/solar/settings-bold";
+import chartBold from "@iconify-icons/solar/chart-bold";
+import tuning2Bold from "@iconify-icons/solar/tuning-2-bold";
+import folderBold from "@iconify-icons/solar/folder-bold";
+import folderWithFilesBold from "@iconify-icons/solar/folder-with-files-bold";
+import layersBold from "@iconify-icons/solar/layers-bold";
+import serverBold from "@iconify-icons/solar/server-bold";
+import cloudBold from "@iconify-icons/solar/cloud-bold";
+import playBold from "@iconify-icons/solar/play-bold";
+import databaseBold from "@iconify-icons/solar/database-bold";
+import cpuBoltBold from "@iconify-icons/solar/cpu-bolt-bold";
+import monitorBold from "@iconify-icons/solar/monitor-bold";
+import pulse2Bold from "@iconify-icons/solar/pulse-2-bold";
+import transferVerticalBold from "@iconify-icons/solar/transfer-vertical-bold";
+import minimalisticMagniferBold from "@iconify-icons/solar/minimalistic-magnifer-bold";
+import trashBinTrashBold from "@iconify-icons/solar/trash-bin-trash-bold";
+import copyBold from "@iconify-icons/solar/copy-bold";
+import refreshBold from "@iconify-icons/solar/refresh-bold";
+import addCircleBold from "@iconify-icons/solar/add-circle-bold";
+import eyeBold from "@iconify-icons/solar/eye-bold";
+import linkMinimalisticBold from "@iconify-icons/solar/link-minimalistic-bold";
+import checkCircleBold from "@iconify-icons/solar/check-circle-bold";
+import closeCircleBold from "@iconify-icons/solar/close-circle-bold";
+import menuDotsBold from "@iconify-icons/solar/menu-dots-bold";
+import stopBold from "@iconify-icons/solar/stop-bold";
+import fileSendBold from "@iconify-icons/solar/file-send-bold";
+import disketteBold from "@iconify-icons/solar/diskette-bold";
+import arrowRightBold from "@iconify-icons/solar/arrow-right-bold";
+import sunBold from "@iconify-icons/solar/sun-bold";
+import moonBold from "@iconify-icons/solar/moon-bold";
+import login3Bold from "@iconify-icons/solar/login-3-bold";
+import userPlusBold from "@iconify-icons/solar/user-plus-bold";
+
+interface SolarIconProps {
   size?: number;
+  color?: string;
+  style?: React.CSSProperties;
+  className?: string;
 }
 
-function solar(name: string) {
+function solar(data: IconifyIcon) {
   return function SolarIcon({ size = 18, ...props }: SolarIconProps) {
-    return <Icon icon={name} width={size} height={size} {...props} />;
+    return <Icon icon={data} width={size} height={size} {...props} />;
   };
 }
 
 // ── Navigation & Layout ─────────────────────────────────────
-export const SolarDashboard = solar("solar:widget-5-bold");
-export const SolarDownload = solar("solar:download-minimalistic-bold");
-export const SolarUpload = solar("solar:upload-minimalistic-bold");
-export const SolarSettings = solar("solar:settings-bold");
-export const SolarChart = solar("solar:chart-bold");
-export const SolarRepair = solar("solar:tuning-2-bold");
-export const SolarFolder = solar("solar:folder-bold");
-export const SolarFolderOpen = solar("solar:folder-with-files-bold");
-export const SolarLayers = solar("solar:layers-bold");
-export const SolarServer = solar("solar:server-bold");
-export const SolarCloud = solar("solar:cloud-bold");
+export const SolarDashboard = solar(widget5Bold);
+export const SolarDownload = solar(downloadMinimalisticBold);
+export const SolarUpload = solar(uploadMinimalisticBold);
+export const SolarSettings = solar(settingsBold);
+export const SolarChart = solar(chartBold);
+export const SolarRepair = solar(tuning2Bold);
+export const SolarFolder = solar(folderBold);
+export const SolarFolderOpen = solar(folderWithFilesBold);
+export const SolarLayers = solar(layersBold);
+export const SolarServer = solar(serverBold);
+export const SolarCloud = solar(cloudBold);
 
 // ── Status & Media ──────────────────────────────────────────
-export const SolarPlay = solar("solar:play-bold");
-export const SolarDatabase = solar("solar:database-bold");
-export const SolarCpu = solar("solar:cpu-bolt-bold");
-export const SolarMonitor = solar("solar:monitor-bold");
-export const SolarActivity = solar("solar:pulse-2-bold");
-export const SolarTransfer = solar("solar:transfer-vertical-bold");
+export const SolarPlay = solar(playBold);
+export const SolarDatabase = solar(databaseBold);
+export const SolarCpu = solar(cpuBoltBold);
+export const SolarMonitor = solar(monitorBold);
+export const SolarActivity = solar(pulse2Bold);
+export const SolarTransfer = solar(transferVerticalBold);
 
 // ── Actions ─────────────────────────────────────────────────
-export const SolarSearch = solar("solar:minimalistic-magnifer-bold");
-export const SolarTrash = solar("solar:trash-bin-trash-bold");
-export const SolarCopy = solar("solar:copy-bold");
-export const SolarRefresh = solar("solar:refresh-bold");
-export const SolarPlus = solar("solar:add-circle-bold");
-export const SolarEye = solar("solar:eye-bold");
-export const SolarLink = solar("solar:link-minimalistic-bold");
-export const SolarCheck = solar("solar:check-circle-bold");
-export const SolarClose = solar("solar:close-circle-bold");
-export const SolarDots = solar("solar:menu-dots-bold");
-export const SolarStop = solar("solar:stop-bold");
-export const SolarFileUpload = solar("solar:file-send-bold");
-export const SolarSave = solar("solar:diskette-bold");
-export const SolarArrowRight = solar("solar:arrow-right-bold");
+export const SolarSearch = solar(minimalisticMagniferBold);
+export const SolarTrash = solar(trashBinTrashBold);
+export const SolarCopy = solar(copyBold);
+export const SolarRefresh = solar(refreshBold);
+export const SolarPlus = solar(addCircleBold);
+export const SolarEye = solar(eyeBold);
+export const SolarLink = solar(linkMinimalisticBold);
+export const SolarCheck = solar(checkCircleBold);
+export const SolarClose = solar(closeCircleBold);
+export const SolarDots = solar(menuDotsBold);
+export const SolarStop = solar(stopBold);
+export const SolarFileUpload = solar(fileSendBold);
+export const SolarSave = solar(disketteBold);
+export const SolarArrowRight = solar(arrowRightBold);
 
 // ── Theme ───────────────────────────────────────────────────
-export const SolarSun = solar("solar:sun-bold");
-export const SolarMoon = solar("solar:moon-bold");
+export const SolarSun = solar(sunBold);
+export const SolarMoon = solar(moonBold);
 
 // ── Auth ────────────────────────────────────────────────────
-export const SolarLogin = solar("solar:login-3-bold");
-export const SolarUserPlus = solar("solar:user-plus-bold");
+export const SolarLogin = solar(login3Bold);
+export const SolarUserPlus = solar(userPlusBold);

@@ -18,33 +18,12 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { SolarDownload, SolarPlay, SolarChart, SolarFolder, SolarSearch, SolarTrash, SolarDots, SolarCopy, SolarRefresh } from "@/components/Icons";
+import { StatCard, thStyle } from "@/components/StatCard";
 import { api } from "@/lib/api";
-import { formatBytes, formatSpeed, eta, getStateColor, getStateLabel } from "@/lib/utils";
+import { formatBytes, formatSpeed, eta, mapStatus, getStatusColor, getTypeFromCategory } from "@/lib/utils";
 import type { Torrent } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 20;
-
-type TorrentStatus = "downloading" | "streaming" | "local";
-
-function mapStatus(state: string, progress: number): TorrentStatus {
-  if (state === "downloading" || state === "stalledDL" || state === "metaDL" || state === "queuedDL") return "downloading";
-  if (progress >= 1 || state === "pausedUP" || state === "uploading") return "local";
-  return "streaming";
-}
-
-function getStatusColor(status: TorrentStatus): string {
-  switch (status) {
-    case "downloading": return "blue";
-    case "streaming": return "orange";
-    case "local": return "green";
-  }
-}
-
-function getTypeFromCategory(category: string): "movie" | "tv" {
-  const c = category.toLowerCase();
-  if (c.includes("movie") || c.includes("radarr") || c.includes("film")) return "movie";
-  return "tv";
-}
 
 export default function DashboardPage() {
   const [torrents, setTorrents] = useState<Torrent[]>([]);
@@ -81,11 +60,6 @@ export default function DashboardPage() {
     [torrents]
   );
 
-  const states = useMemo(
-    () => [...new Set(torrents.map((t) => t.state).filter(Boolean))],
-    [torrents]
-  );
-
   // Map torrents to RealFin-style statuses
   const enriched = useMemo(() =>
     torrents.map((t) => ({
@@ -98,10 +72,20 @@ export default function DashboardPage() {
     [torrents]
   );
 
-  const downloading = enriched.filter((t) => t.status === "downloading");
-  const streaming = enriched.filter((t) => t.status === "streaming");
-  const local = enriched.filter((t) => t.status === "local");
-  const totalSpeed = downloading.reduce((a, t) => a + (t.dlspeed || 0), 0);
+  const { downloading, streaming, local, totalSpeed, movies, tv, localSize } = useMemo(() => {
+    const downloading = enriched.filter((t) => t.status === "downloading");
+    const streaming = enriched.filter((t) => t.status === "streaming");
+    const local = enriched.filter((t) => t.status === "local");
+    return {
+      downloading,
+      streaming,
+      local,
+      totalSpeed: downloading.reduce((a, t) => a + (t.dlspeed || 0), 0),
+      movies: enriched.filter((t) => t.mediaType === "movie").length,
+      tv: enriched.filter((t) => t.mediaType === "tv").length,
+      localSize: local.reduce((a, t) => a + t.total, 0),
+    };
+  }, [enriched]);
 
   // Filtering
   const filtered = useMemo(() => {
@@ -171,10 +155,6 @@ export default function DashboardPage() {
     }
   };
 
-  const movies = enriched.filter((t) => t.mediaType === "movie").length;
-  const tv = enriched.filter((t) => t.mediaType === "tv").length;
-  const localSize = local.reduce((a, t) => a + t.total, 0);
-
   return (
     <>
       {/* Page Header */}
@@ -221,9 +201,6 @@ export default function DashboardPage() {
           sub={`${movies} movies, ${tv} TV`}
         />
       </Box>
-
-      {/* Disk Usage Bar */}
-      <DiskUsage totalSize={enriched.reduce((a, t) => a + t.total, 0)} />
 
       {/* Filters */}
       <Box mb={16}>
@@ -532,112 +509,4 @@ export default function DashboardPage() {
   );
 }
 
-// ─── Sub-components ──────────────────────────────────────────────
 
-const thStyle: React.CSSProperties = {
-  padding: "10px 16px",
-  fontSize: 12,
-  fontWeight: 600,
-  color: "var(--mantine-color-dark-3)",
-  textTransform: "uppercase",
-  letterSpacing: 0.4,
-  whiteSpace: "nowrap",
-  textAlign: "left",
-};
-
-function StatCard({
-  icon,
-  color,
-  value,
-  label,
-  sub,
-}: {
-  icon: React.ReactNode;
-  color: string;
-  value: string | number;
-  label: string;
-  sub?: string;
-}) {
-  return (
-    <Paper
-      className="stat-card"
-      p={16}
-      style={{
-        background: "var(--mantine-color-dark-8)",
-        border: "1px solid var(--mantine-color-dark-6)",
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 14,
-      }}
-    >
-      <Box
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: "var(--mantine-radius-md)",
-          background: "var(--mantine-color-dark-6)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          color: `var(--mantine-color-${color}-6)`,
-        }}
-      >
-        {icon}
-      </Box>
-      <Box>
-        <Text
-          fw={700}
-          lh={1}
-          c="dark.0"
-          mb={4}
-          style={{ fontSize: "1.5rem" }}
-        >
-          {value}
-        </Text>
-        <Text size="xs" c="dimmed">{label}</Text>
-        {sub && <Text size="xs" c="dark.3" mt={2}>{sub}</Text>}
-      </Box>
-    </Paper>
-  );
-}
-
-function DiskUsage({ totalSize }: { totalSize: number }) {
-  // Estimate disk as total media size (since we can't read OS disk info from the frontend)
-  // This shows the total media footprint
-  const displayUsed = totalSize;
-  const displayTotal = totalSize > 0 ? totalSize : 1;
-  const pct = totalSize > 0 ? 100 : 0;
-  const colorClass = pct > 90 ? "red" : pct > 75 ? "yellow" : "teal";
-
-  if (totalSize <= 0) return null;
-
-  return (
-    <Box mb={24}>
-      <Group justify="space-between" mb={6}>
-        <Text size="xs" c="dimmed">Total Media Size</Text>
-        <Text size="xs" c="dark.3">
-          {formatBytes(displayUsed)}
-        </Text>
-      </Group>
-      <Box
-        style={{
-          height: 4,
-          background: "var(--mantine-color-dark-6)",
-          borderRadius: 16,
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          style={{
-            height: "100%",
-            width: `${Math.min(pct, 100)}%`,
-            borderRadius: 16,
-            background: `var(--mantine-color-${colorClass}-6)`,
-            transition: "width 1s ease",
-          }}
-        />
-      </Box>
-    </Box>
-  );
-}

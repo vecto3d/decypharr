@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@iconify-icons/solar": "^1.2.3",
     "@iconify/react": "^6.0.2",
     "@mantine/core": "^9.0.1",
     "@mantine/form": "^9.0.1",
