@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//go:embed frontend/*
+//go:embed all:frontend
 var frontendEmbed embed.FS
 
 // frontendHandler serves the Next.js static export.
