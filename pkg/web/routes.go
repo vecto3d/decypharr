@@ -10,7 +10,7 @@ import (
 func (wb *Web) Routes() http.Handler {
 	r := chi.NewRouter()
 
-	// Static assets - always public
+	// Static assets from old UI (still needed for favicons etc)
 	staticFS, _ := fs.Sub(assetsEmbed, "assets/build")
 	imagesFS, _ := fs.Sub(imagesEmbed, "assets/images")
 	r.Handle("/assets/*", http.StripPrefix(wb.urlBase+"assets/", http.FileServer(http.FS(staticFS))))
@@ -18,23 +18,16 @@ func (wb *Web) Routes() http.Handler {
 
 	// Public routes - no auth needed
 	r.Get("/version", wb.handleGetVersion)
-	r.Get("/login", wb.LoginHandler)
-	r.Post("/login", wb.LoginHandler)
-	r.Get("/register", wb.RegisterHandler)
-	r.Post("/register", wb.RegisterHandler)
 	r.Post("/skip-auth", wb.skipAuthHandler)
 
-	// Protected routes - require auth
+	// Auth routes (POST handled by Go, GET served by frontend)
+	r.Post("/login", wb.LoginHandler)
+	r.Post("/register", wb.RegisterHandler)
+
+	// Protected API routes
 	r.Group(func(r chi.Router) {
 		r.Use(wb.authMiddleware)
-		// Web pages
-		r.Get("/", wb.IndexHandler)
-		r.Get("/download", wb.DownloadHandler)
-		r.Get("/repair", wb.RepairHandler)
-		r.Get("/stats", wb.StatsHandler)
-		r.Get("/settings", wb.ConfigHandler)
 
-		// API routes
 		r.Route("/api", func(r chi.Router) {
 			// Arr management
 			r.Get("/arrs", wb.handleGetArrs)
@@ -50,7 +43,7 @@ func (wb *Web) Routes() http.Handler {
 			// Torrent management
 			r.Get("/torrents", wb.handleGetTorrents)
 			r.Delete("/torrents/{category}/{hash}", wb.handleDeleteTorrent)
-			r.Delete("/torrents", wb.handleDeleteTorrents) // Fixed trailing slash
+			r.Delete("/torrents", wb.handleDeleteTorrents)
 
 			// Config/Auth
 			r.Get("/config", wb.handleGetConfig)
@@ -59,6 +52,23 @@ func (wb *Web) Routes() http.Handler {
 			r.Post("/update-auth", wb.handleUpdateAuth)
 		})
 	})
+
+	// Serve Next.js frontend for all other routes
+	if HasFrontend() && !FrontendDevMode() {
+		r.NotFound(frontendHandler().ServeHTTP)
+	} else {
+		// Fallback to old template UI when no frontend is embedded
+		r.Get("/login", wb.LoginHandler)
+		r.Get("/register", wb.RegisterHandler)
+		r.Group(func(r chi.Router) {
+			r.Use(wb.authMiddleware)
+			r.Get("/", wb.IndexHandler)
+			r.Get("/download", wb.DownloadHandler)
+			r.Get("/repair", wb.RepairHandler)
+			r.Get("/stats", wb.StatsHandler)
+			r.Get("/settings", wb.ConfigHandler)
+		})
+	}
 
 	return r
 }

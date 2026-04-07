@@ -8,12 +8,17 @@ docker-compose.yml
 **.torrent
 torrents.json
 **/dist/
-*.json
 .ven/**
 docs/**
 
-# Don't copy node modules
+# Don't copy node modules (rebuilt in Docker)
 node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Don't copy dev frontend embed (rebuilt in Docker)
+pkg/web/frontend/
 
 # Don't copy development files
 .git/
@@ -21,6 +26,8 @@ node_modules/
 *.md
 .env*
 *.log
+.claude/
+.next/
 
 # Build artifacts
 decypharr

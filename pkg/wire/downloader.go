@@ -561,6 +561,11 @@ func (s *Store) processMultiSeasonSymlinks(torrent *Torrent, debridTorrent *type
 		s.torrents.AddOrUpdate(seasonTorrent)
 
 		s.logger.Info().Str("path", torrentSymlinkPath).Msgf("Successfully created season %d torrent: %s", seasonInfo.SeasonNumber, seasonTorrent.ID)
+
+		// Trigger instant local cache copy for this season
+		if s.localCache != nil && torrentSymlinkPath != "" {
+			s.localCache.CopySymlinksInDir(torrentSymlinkPath)
+		}
 	}
 	s.torrents.Delete(torrent.Hash, "", false)
 	s.logger.Info().Msgf("Multi-season processing completed for %s", debridTorrent.Name)

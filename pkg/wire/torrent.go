@@ -203,6 +203,12 @@ func (s *Store) processFiles(torrent *Torrent, debridTorrent *types.Torrent, imp
 			onFailed(err)
 		}
 		onSuccess(torrentSymlinkPath)
+
+		// Trigger instant local cache copy if enabled
+		if s.localCache != nil && torrentSymlinkPath != "" {
+			s.logger.Info().Msgf("Triggering instant local cache for: %s", torrentSymlinkPath)
+			s.localCache.CopySymlinksInDir(torrentSymlinkPath)
+		}
 		return
 	case "download":
 		// Download action, we will download the torrent to the specified folder

@@ -29,6 +29,8 @@ type Store struct {
 	downloadSemaphore  chan struct{}
 	removeStalledAfter time.Duration // Duration after which stalled torrents are removed
 	scheduler          gocron.Scheduler
+	localCache         *LocalCacheWorker
+	localCacheStop     chan struct{}
 }
 
 var (
@@ -70,6 +72,13 @@ func Get() *Store {
 			importsQueue:      NewImportQueue(context.Background(), 1000),
 			scheduler:         scheduler,
 		}
+
+		// Initialize local cache worker if enabled
+		if cfg.LocalCache.Enabled {
+			instance.localCache = NewLocalCacheWorker()
+			instance.localCacheStop = make(chan struct{})
+			go instance.localCache.RunBackgroundScan(instance.localCacheStop)
+		}
 		if cfg.RemoveStalledAfter != "" {
 			removeStalledAfter, err := time.ParseDuration(cfg.RemoveStalledAfter)
 			if err == nil {
@@ -99,6 +108,10 @@ func Reset() {
 		if instance.downloadSemaphore != nil {
 			// Close the semaphore channel to
 			close(instance.downloadSemaphore)
+		}
+
+		if instance.localCacheStop != nil {
+			close(instance.localCacheStop)
 		}
 
 		if instance.scheduler != nil {

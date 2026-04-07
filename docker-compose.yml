@@ -1,0 +1,15 @@
+services:
+  decypharr:
+    image: ghcr.io/vecto3d/decypharr:latest
+    container_name: decypharr
+    ports:
+      - "8282:8282"
+    volumes:
+      - ./config:/app
+      - /mnt:/mnt:rshared
+    devices:
+      - /dev/fuse:/dev/fuse:rwm
+    cap_add:
+      - SYS_ADMIN
+    env_file: .env
+    restart: unless-stopped

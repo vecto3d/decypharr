@@ -22,6 +22,10 @@ func main() {
 	var configPath string
 	flag.StringVar(&configPath, "config", "/data", "path to the data folder")
 	flag.Parse()
+
+	// Load .env file before reading config (looks in config dir then cwd)
+	config.LoadEnvFile(configPath)
+
 	config.SetConfigPath(configPath)
 	config.Get()
 

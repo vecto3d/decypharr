@@ -1,0 +1,61 @@
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--mantine-color-dark-9);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-dark-4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-dark-3);
+}
+
+/* Sidebar nav link transitions */
+.nav-link {
+  transition: background 150ms ease, color 150ms ease;
+}
+
+/* Stat card hover */
+.stat-card {
+  transition: border-color 150ms ease;
+}
+.stat-card:hover {
+  border-color: var(--mantine-color-dark-4);
+}
+
+/* Progress bar animation */
+.progress-fill {
+  transition: width 1s ease;
+}
+
+/* Table row hover */
+tbody tr {
+  transition: background 150ms ease;
+}
+
+/* Match input backgrounds to card/box backgrounds */
+.mantine-Input-input,
+.mantine-Select-input,
+.mantine-TextInput-input,
+.mantine-PasswordInput-input,
+.mantine-Textarea-input,
+.mantine-NumberInput-input,
+.mantine-FileInput-input {
+  background: var(--mantine-color-dark-8) !important;
+  border-color: var(--mantine-color-dark-6) !important;
+}
+
+/* Spin animation for refresh icon */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Pulse animation for status dot */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

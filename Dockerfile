@@ -1,5 +1,14 @@
-# Stage 1: Build binaries
-FROM --platform=$BUILDPLATFORM golang:1.24-alpine as builder
+# Stage 1: Build Next.js frontend
+FROM node:20-alpine AS frontend
+
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit
+COPY frontend/ .
+RUN BUILD_MODE=export npx next build
+
+# Stage 2: Build Go binaries
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -13,6 +22,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download -x
 
 COPY . .
+
+# Copy frontend static export into Go embed directory
+COPY --from=frontend /frontend/out ./pkg/web/frontend
 
 # Build main binary
 RUN --mount=type=cache,target=/go/pkg/mod \
@@ -29,7 +41,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -trimpath -ldflags="-w -s" \
     -o /healthcheck cmd/healthcheck/main.go
 
-# Stage 2: Final image
+# Stage 3: Final image
 FROM alpine:latest
 
 ARG VERSION=0.0.0

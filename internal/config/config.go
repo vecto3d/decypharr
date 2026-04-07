@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -58,6 +59,17 @@ type QBitTorrent struct {
 	SkipPreCache      	bool     `json:"skip_pre_cache,omitempty"`
 	MaxDownloads      	int      `json:"max_downloads,omitempty"`
 	AlwaysRmTrackerUrls bool     `json:"always_rm_tracker_urls,omitempty"`
+}
+
+type LocalCache struct {
+	Enabled          bool   `json:"enabled,omitempty"`
+	RcloneIndicator  string `json:"rclone_indicator,omitempty"`  // Substring in symlink target that identifies rclone mounts (e.g. "decypharr/realdebrid")
+	MinFreeMB        int    `json:"min_free_mb,omitempty"`       // Stop downloading below this free space (default: 20000 = 20GB)
+	StaleHours       int    `json:"stale_hours,omitempty"`       // Remove .part files older than this (default: 24)
+	MaxParallel      int    `json:"max_parallel,omitempty"`      // Max simultaneous file copies (default: 2)
+	ScanInterval     int    `json:"scan_interval,omitempty"`     // Seconds between background scans for missed symlinks (default: 1800)
+	UseDebridCDN     bool   `json:"use_debrid_cdn,omitempty"`    // Try to download directly from debrid CDN instead of FUSE copy
+	Aria2Connections int    `json:"aria2_connections,omitempty"` // Parallel connections per download when using CDN (default: 16)
 }
 
 type Arr struct {
@@ -145,6 +157,7 @@ type Config struct {
 	Repair             Repair      `json:"repair,omitempty"`
 	WebDav             WebDav      `json:"webdav,omitempty"`
 	Rclone             Rclone      `json:"rclone,omitempty"`
+	LocalCache         LocalCache  `json:"local_cache,omitempty"`
 	AllowedExt         []string    `json:"allowed_file_types,omitempty"`
 	MinFileSize        string      `json:"min_file_size,omitempty"` // Minimum file size to download, 10MB, 1GB, etc
 	MaxFileSize        string      `json:"max_file_size,omitempty"` // Maximum file size to download (0 means no limit)
@@ -311,6 +324,20 @@ func (c *Config) IsSizeAllowed(size int64) bool {
 	return true
 }
 
+// GetDebridAPIKey returns the API key for the named debrid service, or the first one found.
+func (c *Config) GetDebridAPIKey(name string) string {
+	// Check env var first
+	if v := Env("RD_API_KEY", ""); v != "" && (name == "" || name == "realdebrid") {
+		return v
+	}
+	for _, d := range c.Debrids {
+		if name == "" || strings.EqualFold(d.Name, name) {
+			return d.APIKey
+		}
+	}
+	return ""
+}
+
 func (c *Config) SecretKey() string {
 	return cmp.Or(os.Getenv("DECYPHARR_SECRET_KEY"), "\"wqj(v%lj*!-+kf@4&i95rhh_!5_px5qnuwqbr%cjrvrozz_r*(\"")
 }
@@ -456,6 +483,59 @@ func (c *Config) setDefaults() {
 		c.Rclone.DirCacheTime = cmp.Or(c.Rclone.DirCacheTime, "5m")
 		c.Rclone.LogLevel = cmp.Or(c.Rclone.LogLevel, "INFO")
 	}
+	// Apply .env overrides for paths
+	if v := Env("DOWNLOAD_FOLDER", ""); v != "" {
+		c.QBitTorrent.DownloadFolder = v
+	}
+	if v := Env("RCLONE_MOUNT_PATH", ""); v != "" {
+		c.Rclone.MountPath = v
+	}
+
+	// Apply .env overrides for local cache
+	if EnvBool("LOCAL_CACHE_ENABLED", c.LocalCache.Enabled) {
+		c.LocalCache.Enabled = true
+	}
+	if v := Env("RCLONE_INDICATOR", ""); v != "" {
+		c.LocalCache.RcloneIndicator = v
+	}
+	if v := Env("SCAN_INTERVAL", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			c.LocalCache.ScanInterval = n
+		}
+	}
+	if v := Env("MIN_FREE_MB", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			c.LocalCache.MinFreeMB = n
+		}
+	}
+	if v := Env("STALE_HOURS", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			c.LocalCache.StaleHours = n
+		}
+	}
+	if v := Env("MAX_PARALLEL", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			c.LocalCache.MaxParallel = n
+		}
+	}
+	if EnvBool("USE_DEBRID_CDN", c.LocalCache.UseDebridCDN) {
+		c.LocalCache.UseDebridCDN = true
+	}
+	if v := Env("ARIA2_CONNECTIONS", ""); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			c.LocalCache.Aria2Connections = n
+		}
+	}
+
+	// Allow RD_API_KEY env to set the first debrid's API key
+	if v := Env("RD_API_KEY", ""); v != "" && len(c.Debrids) > 0 {
+		for i := range c.Debrids {
+			if c.Debrids[i].Name == "realdebrid" && c.Debrids[i].APIKey == "" {
+				c.Debrids[i].APIKey = v
+			}
+		}
+	}
+
 	// Load the auth file
 	c.Auth = c.GetAuth()
 
