@@ -1,7 +1,6 @@
 package web
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/sirrobot01/decypharr/internal/config"
@@ -24,25 +23,18 @@ func (wb *Web) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var credentials struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
+	username := r.FormValue("username")
+	password := r.FormValue("password")
 
-	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
-	if wb.verifyAuth(credentials.Username, credentials.Password) {
+	if wb.verifyAuth(username, password) {
 		session, _ := wb.cookie.Get(r, "auth-session")
 		session.Values["authenticated"] = true
-		session.Values["username"] = credentials.Username
+		session.Values["username"] = username
 		if err := session.Save(r, w); err != nil {
 			http.Error(w, "Error saving session", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
@@ -108,7 +100,7 @@ func (wb *Web) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (wb *Web) IndexHandler(w http.ResponseWriter, r *http.Request) {

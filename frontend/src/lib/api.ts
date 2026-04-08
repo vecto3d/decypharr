@@ -45,7 +45,7 @@ export const api = {
     request<void>("/register", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ username, password }),
+      body: new URLSearchParams({ username, password, confirmPassword: password }),
     }),
 
   skipAuth: () =>

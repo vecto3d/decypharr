@@ -38,7 +38,7 @@ export default function RegisterPage() {
     try {
       await api.register(username, password);
       notifications.show({ message: "Account created", color: "green" });
-      router.push("/login");
+      router.push("/");
     } catch (e) {
       notifications.show({ message: `Registration failed: ${e}`, color: "red" });
     } finally {

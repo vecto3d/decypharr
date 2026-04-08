@@ -22,6 +22,7 @@ func (wb *Web) Routes() http.Handler {
 
 	// Auth routes (POST handled by Go, GET served by frontend)
 	r.Post("/login", wb.LoginHandler)
+	r.Post("/api/v2/auth/login", wb.LoginHandler)
 	r.Post("/register", wb.RegisterHandler)
 
 	// Protected API routes
