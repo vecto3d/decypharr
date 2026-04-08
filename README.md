@@ -6,6 +6,33 @@
 
 Decypharr combines the power of QBittorrent with popular Debrid services to enhance your media management. It provides a familiar interface for Sonarr, Radarr, and other \*Arr applications.
 
+## Screenshots
+
+| Dashboard | Downloads |
+|:-:|:-:|
+| ![Dashboard](docs/docs/images/dashboard.png) | ![Downloads](docs/docs/images/download.png) |
+
+| Repair | Stats |
+|:-:|:-:|
+| ![Repair](docs/docs/images/repair.png) | ![Stats](docs/docs/images/stats.png) |
+
+<details>
+<summary>Settings tabs</summary>
+
+| General | Debrid |
+|:-:|:-:|
+| ![General](docs/docs/images/settings/settings-general.png) | ![Debrid](docs/docs/images/settings/settings-debrid.png) |
+
+| QBittorrent | Arrs |
+|:-:|:-:|
+| ![QBittorrent](docs/docs/images/settings/settings-qbittorrent.png) | ![Arrs](docs/docs/images/settings/settings-arrs.png) |
+
+| Repair | Rclone |
+|:-:|:-:|
+| ![Repair](docs/docs/images/settings/settings-repair.png) | ![Rclone](docs/docs/images/settings/settings-rclone.png) |
+
+</details>
+
 ## Features
 
 - Mock QBittorrent API that supports the Arrs (Sonarr, Radarr, Lidarr etc)

@@ -7,8 +7,17 @@ import type {
   ArrConfig,
   VersionInfo,
 } from "./types";
+import {
+  mockTorrents,
+  mockConfig,
+  mockRepairJobs,
+  mockStats,
+  mockArrs,
+  mockVersion,
+} from "./mock-data";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO === "true";
 
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${endpoint}`, {
@@ -37,7 +46,7 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   return res.text() as unknown as T;
 }
 
-export const api = {
+const realApi = {
   // Auth
   login: (username: string, password: string) =>
     request<string>("/api/v2/auth/login", {
@@ -128,3 +137,27 @@ export const api = {
   // Version
   getVersion: () => request<VersionInfo>("/version"),
 };
+
+const demoApi: typeof realApi = {
+  login: async () => "Ok.",
+  register: async () => {},
+  skipAuth: async () => {},
+  getTorrents: async () => mockTorrents,
+  deleteTorrent: async () => {},
+  deleteTorrents: async () => {},
+  addTorrents: async () => ({ results: [], errors: [] }),
+  getConfig: async () => mockConfig,
+  saveConfig: async () => {},
+  updateAuth: async () => {},
+  refreshToken: async () => ({ token: "demo-token-xxxxxxxxxxxx" }),
+  getRepairJobs: async () => mockRepairJobs,
+  createRepairJob: async () => mockRepairJobs[0],
+  processRepairJob: async () => {},
+  stopRepairJob: async () => {},
+  deleteRepairJobs: async () => {},
+  getArrs: async () => mockArrs,
+  getStats: async () => mockStats,
+  getVersion: async () => mockVersion,
+};
+
+export const api = DEMO_MODE ? demoApi : realApi;
