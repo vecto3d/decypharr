@@ -85,7 +85,7 @@ export const api = {
     request<void>("/api/update-auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, confirm_password: password }),
     }),
 
   refreshToken: () =>

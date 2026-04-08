@@ -25,6 +25,15 @@ func (wb *Web) Routes() http.Handler {
 	r.Post("/api/v2/auth/login", wb.LoginHandler)
 	r.Post("/register", wb.RegisterHandler)
 
+	// GET /login and /register must be explicitly registered so Chi doesn't
+	// return 405 (it sees the POST route and rejects the method instead of
+	// falling through to the NotFound/frontend handler).
+	if HasFrontend() && !FrontendDevMode() {
+		fe := frontendHandler()
+		r.Get("/login", fe.ServeHTTP)
+		r.Get("/register", fe.ServeHTTP)
+	}
+
 	// Protected API routes
 	r.Group(func(r chi.Router) {
 		r.Use(wb.authMiddleware)

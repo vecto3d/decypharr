@@ -15,6 +15,8 @@ const nextConfig: NextConfig = isExport
           { source: "/debug/:path*", destination: "http://localhost:8282/debug/:path*" },
           { source: "/version", destination: "http://localhost:8282/version" },
           { source: "/skip-auth", destination: "http://localhost:8282/skip-auth" },
+          { source: "/login", destination: "http://localhost:8282/login" },
+          { source: "/register", destination: "http://localhost:8282/register" },
         ];
       },
     };
