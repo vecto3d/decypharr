@@ -76,6 +76,7 @@ type Arr struct {
 	Name             string `json:"name,omitempty"`
 	Host             string `json:"host,omitempty"`
 	Token            string `json:"token,omitempty"`
+	Enabled          *bool  `json:"enabled,omitempty"` // nil = enabled (legacy default); explicit false disables the arr
 	Cleanup          bool   `json:"cleanup,omitempty"`
 	SkipRepair       bool   `json:"skip_repair,omitempty"`
 	DownloadUncached *bool  `json:"download_uncached,omitempty"`

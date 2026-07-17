@@ -164,6 +164,9 @@ func NewStorage() *Storage {
 		if a.Host == "" || a.Token == "" || a.Name == "" {
 			continue // Skip if host or token is not set
 		}
+		if a.Enabled != nil && !*a.Enabled {
+			continue // Explicitly disabled (nil = legacy configs default to enabled)
+		}
 		name := a.Name
 		as := New(name, a.Host, a.Token, a.Cleanup, a.SkipRepair, a.DownloadUncached, a.SelectedDebrid, a.Source)
 		if request.ValidateURL(as.Host) != nil {
