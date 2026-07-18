@@ -21,10 +21,17 @@ type LocalCacheWorker struct {
 	cfg       config.LocalCache
 	mediaDirs []string
 	sem       chan struct{} // concurrency limiter
-	logger    zerolog.Logger
-	mu        sync.Mutex
-	active    map[string]bool // tracks files currently being copied
+	logger      zerolog.Logger
+	mu          sync.Mutex
+	active      map[string]bool // tracks files currently being copied
+	scanPending bool            // a post-import scan is already scheduled
 }
+
+// importGrace is how long to wait for an arr to import a finished download into
+// the library before scanning for it. The arrs poll their download client on
+// roughly a minute, so this errs on the generous side; anything missed is still
+// caught by the periodic background scan.
+const importGrace = 90 * time.Second
 
 func NewLocalCacheWorker() *LocalCacheWorker {
 	cfg := config.Get()
@@ -74,10 +81,39 @@ func NewLocalCacheWorker() *LocalCacheWorker {
 	}
 }
 
+// withinCacheDirs reports whether dir is inside one of the configured CacheDirs.
+// When CacheDirs is empty every directory qualifies, preserving the original
+// behaviour of caching whatever the caller passed in.
+func (w *LocalCacheWorker) withinCacheDirs(dir string) bool {
+	if len(w.cfg.CacheDirs) == 0 {
+		return true
+	}
+	clean := filepath.Clean(dir)
+	for _, root := range w.cfg.CacheDirs {
+		root = filepath.Clean(root)
+		if clean == root || strings.HasPrefix(clean, root+string(filepath.Separator)) {
+			return true
+		}
+	}
+	return false
+}
+
 // CopySymlinksInDir is called immediately after symlinks are created.
 // It finds all symlinks in the given directory pointing to rclone mounts
 // and starts copying them to local storage in the background.
+//
+// The caller passes the *download* folder. When CacheDirs is configured the
+// library is the thing worth caching, and the arrs move/import the symlink out
+// of the download folder anyway — copying it there would consume disk and pull
+// the file from the debrid provider a second time without changing what the
+// media server reads. In that case skip the copy and let the scan of CacheDirs
+// pick the file up once the arr has imported it.
 func (w *LocalCacheWorker) CopySymlinksInDir(dir string) {
+	if !w.withinCacheDirs(dir) {
+		w.logger.Debug().Msgf("Skipping %s: outside configured cache dirs", dir)
+		go w.scanAfterImport()
+		return
+	}
 	go func() {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
@@ -108,6 +144,27 @@ func (w *LocalCacheWorker) CopySymlinksInDir(dir string) {
 			}
 		}
 	}()
+}
+
+// scanAfterImport waits for the arr to import the finished download into the
+// library, then scans the configured cache dirs. Debounced, so a burst of
+// completing torrents schedules one scan rather than one per torrent.
+func (w *LocalCacheWorker) scanAfterImport() {
+	w.mu.Lock()
+	if w.scanPending {
+		w.mu.Unlock()
+		return
+	}
+	w.scanPending = true
+	w.mu.Unlock()
+
+	time.Sleep(importGrace)
+
+	w.mu.Lock()
+	w.scanPending = false
+	w.mu.Unlock()
+
+	w.scan()
 }
 
 // copyFileAsync starts a background copy for a single symlink
